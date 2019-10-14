@@ -1,0 +1,92 @@
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+---
+################################################################################
+#
+#   ORGANIZATIONS
+#
+#   This section defines the organizational identities that can be referenced
+#   in the configuration profiles.
+#
+################################################################################
+Organizations:
+
+    # SampleOrg defines an MSP using the sampleconfig. It should never be used
+    # in production but may be used as a template for other definitions.
+    - &OrdererOrg
+        Name: OrdererOrg
+        ID: OrdererMSP
+        MSPDir: crypto-config/ordererOrganizations/aaa.com/msp
+    - &Org1
+        Name: pyOrg
+        ID: pyMSP
+        MSPDir: crypto-config/peerOrganizations/py.aaa.com/msp
+        AnchorPeers:
+            - Host: peer0.py.aaa.com
+              Port: 7051
+
+    - &Org2
+        Name: cppOrg
+        ID: cppMSP
+        MSPDir: crypto-config/peerOrganizations/cpp.aaa.com/msp
+        AnchorPeers:
+            - Host: peer0.cpp.aaa.com
+              Port: 7051
+
+Capabilities:
+    Channel: &ChannelCapabilities
+        V1_1: true
+    Orderer: &OrdererCapabilities
+        V1_1: true
+    Application: &ApplicationCapabilities
+        V1_2: true
+
+Application: &ApplicationDefaults
+    Organizations:
+
+Orderer: &OrdererDefaults
+    OrdererType: solo
+    Addresses:
+        - orderer.aaa.com:7050
+
+    BatchTimeout: 2s
+
+
+    BatchSize:
+        MaxMessageCount: 100
+        AbsoluteMaxBytes: 32 MB
+        PreferredMaxBytes: 512 KB
+
+    Kafka:
+        Brokers:
+            - 127.0.0.1:9092
+            
+    Organizations:
+
+Profiles:
+    TwoOrgsOrdererGenesis:
+        Capabilities:
+            <<: *ChannelCapabilities
+        Orderer:
+            Organizations:
+                - *OrdererOrg
+            Capabilities:
+                <<: *OrdererCapabilities
+        Consortiums:
+            SampleConsortium:
+                Organizations:
+                    - *Org1
+                    - *Org2
+
+    TwoOrgsChannel:
+        Consortium: SampleConsortium
+        Application:
+            <<: *ApplicationDefaults
+            Organizations:
+                    - *Org1
+                    - *Org2
+            Capabilities:
+                <<: *ApplicationCapabilities 
